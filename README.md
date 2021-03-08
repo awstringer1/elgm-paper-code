@@ -10,7 +10,7 @@ Data are sourced as follows:
 
 - **Section 5**: data are sourced from the [ICPSR](https://www.icpsr.umich.edu/web/ICPSR/studies/30122), choose "Download" and then "Delimited". The user agreement prohibits directly sharing the data here.
 
-**Section 6.1**: data are available [here](https://github.com/aknandi/disaggregation_paper/tree/master/data).
+- **Section 6.1**: data are available [here](https://github.com/aknandi/disaggregation_paper/tree/master/data).
 
 - **Section 6.2**: dataset `Leuk` in package `INLA`.
 
