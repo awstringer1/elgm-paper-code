@@ -1,28 +1,67 @@
 ### Cox PH example ###
+# Reproduce example 6.2
+# This script should be sourcable in a clean session without modification.
+# NOTE: UK border data for plots are downloaded using raster::get_data
+# Sometimes the server is down. In this case, the script fits the model but doesn't
+# compute any summaries.
 
-## Load Libraries ----
+## BEGIN SETUP ##
 
-library(tidyverse)
-library(Matrix)
-library(geostatsp)
-library(sp)
-library(raster)
-library(aghq)
+## Libraries ----
+
+# Test for, and install if not found, the packages required to run this script.
+pkgs <- c(
+  'tidyverse',
+  'Matrix',
+  'aghq',
+  'sp',
+  'geostatsp',
+  'raster',
+  'INLA' # For Leuk data only
+)
+for (pkg in pkgs) {
+  if (!require(pkg,character.only = TRUE,quietly = TRUE)) {
+    cat(paste0("Could not find package ",pkg,", installing from CRAN.\n"))
+    if (pkg == "INLA") {
+      install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/testing"), dep=TRUE)
+      # Don't load it, only need for Leuk data
+    } else {
+      install.packages(pkg)
+      require(pkg,character.only = TRUE,quietly = TRUE)
+    }
+  }
+}
+
+
 
 ## Global Variables ----
-options(mc.cores = 8)
-globalpath <- "/storage/phd/projects/no-epsilon/"
-spatialdatapath <- "/storage/phd/projects/no-epsilon/data/aggspatial/"
-savepath <- "/storage/coxph-model-20210211.RData"
-savebrickpath <- "/storage/coxph-brick-20210211.RData"
+options(mc.cores = 16)
+globalpath <- tempdir()
+datapath <- file.path(globalpath,"data")
+spatialdatapath <- file.path(datapath,"aggspatial/")
+figurepath <- file.path(globalpath,"figures")
+if (!dir.exists(datapath)) dir.create(datapath)
+if (!dir.exists(spatialdatapath)) dir.create(spatialdatapath)
+if (!dir.exists(figurepath)) dir.create(figurepath)
 
-figurepath <- "/storage/phd/projects/no-epsilon/jcgs/paper/figures/"
 datestamp <- "20210211"
 version <- "v1"
 
-domodel <- FALSE # TRUE: fit model, FALSE: load from disk
-dobrick <- FALSE # TRUE: simulate fields, FALSE: load from disk
-dosummaries <- TRUE # FALSE: don't bother with computing summaries. I do this interactively in RStudio for convenience
+savepath <- file.path(datapath,paste0("coxph-model-",datestamp,"-",version,".RData"))
+savebrickpath <- file.path(datapath,paste0("coxph-brick-",datestamp,"-",version,".RData"))
+
+domodel <- TRUE # TRUE: fit model, FALSE: load from disk
+dobrick <- TRUE # TRUE: simulate fields, FALSE: load from disk
+dosummaries <- TRUE # FALSE: don't bother with computing summaries.
+
+## Download the UK border data ----
+# Sometimes this fails, because the server is down.
+# In that case, do not do the summaries
+ukBorderLL <- tryCatch(raster::getData("GADM", country='GBR', level=3),error = function(e) e)
+if (inherits(ukBorderLL,'condition')) {
+  cat(paste0("Could not download the UK border data. Setting dobrick and dosummaries to FALSE.\n"))
+  dobrick <- dosummaries <- FALSE
+}
 
 PLOTTEXTSIZE <- 28
 
@@ -44,9 +83,8 @@ leuk <- as_tibble(Leuk)
 
 agecentre <- mean(leuk$age)
 wbccentre <- mean(leuk$wbc)
-# tpibin <- simplebin(leuk$tpi,200)
 tpibin <- round(leuk$tpi,1)
-tpicentre <- 0 # Has to be a value actually in the data, for RW centering
+tpicentre <- 0
 
 dataformodelling <- leuk %>%
   mutate(time = time + rnorm(length(leuk$time),sd = .00001),
@@ -71,6 +109,8 @@ pointsdata <- SpatialPointsDataFrame(
   proj4string = PROJTOUSE
 )
 pointsdata <- spTransform(pointsdata,crstouse)
+      
+## END SETUP ##
 
 ## Model setup ----
 
@@ -78,7 +118,7 @@ pointsdata <- spTransform(pointsdata,crstouse)
 Amat <- Diagonal(n = nrow(dataformodelling),x = 1) 
 Xmat <- sparse.model.matrix(time ~ age + sex + wbc + tpi,data = dataformodelling)
 
-# Censoring indicator- 1 means NOT censored so likelihood is c * l
+# Censoring indicator- 1 means NOT censored
 # Remove the first observation (guaranteed not to be censored by sorting), as likelihood
 # depends only on differences from this obs
 censor <- dataformodelling$cens[-1] # 1 == not censored, confusing but more useful.
@@ -177,7 +217,7 @@ Q_matrix <- function(theta) {
   )
   
   bb <- beta_prec * diag(p)
-
+  
   rbind(
     cbind(mm,Matrix(0,nrow = nrow(mm),ncol = p,sparse = FALSE)),
     cbind(Matrix(0,nrow = p,ncol = ncol(mm),sparse = FALSE),bb)
@@ -241,7 +281,7 @@ if (domodel) {
     k = 3,
     # theta starting values from Brown (2015), geostatsp/diseasemapping software paper
     startingvalue = list(W = rep(0,Wd),theta = c(-1,log(50*1000))),
-    control = list(method = 'BFGS',inner_method = 'trust')
+    control = default_control_marglaplace(method = 'BFGS',inner_method = 'trust')
   )
   cat("Finished model, took ",format(difftime(Sys.time(),tm,units = 'secs')),"\n")
   save(coxphmod,file = savepath)
@@ -255,6 +295,7 @@ set.seed(87964382)
 posterior_samples <- sample_marginal(coxphmod,1e03)
 
 if (dosummaries) {
+  cat("Posterior summaries, time = ",format(tm),"\n")
   # Parameter table
   # Betas
   betaidx <- (Wd-p+2):Wd # Note: first index is intercept, not actually estimable here
@@ -278,7 +319,7 @@ if (dosummaries) {
     q97.5 = c(beta97.5,sigma_quants[2],rho_quants[2])
   )
   
-  readr::write_csv(coeftable,paste0(figurepath,"coxphcoeftable-",datestamp,"-",version,".csv"))
+  readr::write_csv(coeftable,file.path(figurepath,paste0("coxphcoeftable-",datestamp,"-",version,".csv")))
   
   knitr::kable(
     coeftable,
@@ -319,12 +360,12 @@ if (dosummaries) {
   
   WIDTH <- HEIGHT <- 7
   ggsave(
-    paste0(figurepath,"coxphsigmapostplot-",datestamp,"-",version,".pdf"),
+    file.path(figurepath,paste0("coxphsigmapostplot-",datestamp,"-",version,".pdf")),
     sigmaplot,
     width = WIDTH,height = HEIGHT
   )
   ggsave(
-    paste0(figurepath,"coxphrhopostplot-",datestamp,"-",version,".pdf"),
+    file.path(figurepath,paste0("coxphrhopostplot-",datestamp,"-",version,".pdf")),
     rhoplot,
     width = WIDTH,height = HEIGHT
   )
@@ -343,7 +384,7 @@ simulate_spatial_fields <- function(U,
   for (i in 1:length(fieldlist)) {
     fielddat <- pointsdata
     fielddat@data <- data.frame(w = as.numeric(U[ ,i]))
-
+    
     # Back-transform the Matern params
     sig <- exp(theta$theta1[i])
     rho <- exp(theta$theta2[i])
@@ -381,12 +422,7 @@ if (dobrick) {
 ## Plots ----
 
 if (dosummaries) {
-  # Get the UK Border
-  ukBorderLL = raster::getData("GADM", country='GBR', level=3) # Regions
   ukBorder = spTransform(ukBorderLL, projection(pointsdata))
-  # ukBorder = ukBorder[ukBorder$NAME_1 %in% c("England","Wales"), ]
-  # ukBorder = raster::crop(ukBorder, extent(pointsdata))
-  # TODO: Plot only polygons that have a point in them, this isn't quite what's being done
   pointsinpoly <- pointsdata %over% ukBorder
   pointsinpolyID <- unique(pointsinpoly$GID_2)
   ukBorder <- ukBorder[ukBorder$GID_2 %in% pointsinpolyID, ]
@@ -406,7 +442,6 @@ if (dosummaries) {
     style = "fixed",
     col = "Spectral",
     rev = TRUE,
-    # transform='log',
     dec = -log10(0.05)
   )
   
@@ -414,8 +449,8 @@ if (dosummaries) {
   bigvalues <- quantile(values(plotraster),probs = (0:(colvals-1))/(colvals-1))
   plotraster <- mask(plotraster, ukBorder)
   
-
-  pdf(paste0(figurepath,"coxphspatialplot-",datestamp,"-",version,".pdf"),width = 7,height = 7)
+  
+  pdf(file.path(figurepath,paste0("coxphspatialplot-",datestamp,"-",version,".pdf")),width = 7,height = 7)
   mapmisc::map.new(pointsdata)
   plot(plotraster,
        col = predcols$col,
@@ -442,7 +477,7 @@ if (dosummaries) {
   
   plotraster <- mask(plotraster, ukBorder)
   
-  pdf(paste0(figurepath,"coxphexceedanceplot-",datestamp,"-",version,".pdf"),width = 7,height = 7)
+  pdf(file.path(figurepath,paste0("coxphexceedanceplot-",datestamp,"-",version,".pdf")),width = 7,height = 7)
   mapmisc::map.new(pointsdata)
   plot(plotraster,
        col = predcols$col,
@@ -454,4 +489,4 @@ if (dosummaries) {
   mapmisc::legendBreaks('topright', predcols, cex=1.5, bty='n')
   dev.off()
 }
-
+cat(paste0("Done. You can go to ",figurepath," to see the output. Thanks!\n"))

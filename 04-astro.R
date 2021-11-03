@@ -1,31 +1,51 @@
 ### Astro example ###
+# Reproduce example 6.3
+# Data obtained from aghq package
+# Results saved to temp storage
+# This script should be sourcable without modification
+# NOTE: you need the ipoptr package to run this script. This is a nonstandard installation.
+# Instructions: https://coin-or.github.io/Ipopt/INSTALL.html
 
-## Load packages ----
 
-library(tidyverse)
-library(aghq)
-library(TMB)
-library(ipoptr)
-library(Matrix)
+## BEGIN SETUP ##
+
+## Libraries ----
+
+# Test for, and install if not found, the packages required to run this script.
+pkgs <- c(
+  'tidyverse',
+  'Matrix',
+  'aghq',
+  'TMB',
+  'ipoptr'
+)
+for (pkg in pkgs) {
+  if (!require(pkg,character.only = TRUE,quietly = TRUE)) {
+    cat(paste0("Could not find package ",pkg,", installing from CRAN.\n"))
+    if (pkg=='ipoptr') {
+      stop("You need to install ipoptr to run this script. This is a non-standard installation. Instructions found at https://coin-or.github.io/Ipopt/INSTALL.html")
+    } else {
+      install.packages(pkg)
+      require(pkg,character.only = TRUE,quietly = TRUE)
+    }
+  }
+}
 
 ## Setup ----
 
-plotsavepath <- "/storage/phd/projects/no-epsilon/jcgs/paper/figures/"
+globalpath <- tempdir()
+figurepath <- file.path(globalpath,"figures")
+if (!dir.exists(figurepath)) dir.create(figurepath)
 datestamp <- "20210211"
 version <- "v1"
 
-wdpath <- "/storage/phd/projects/no-epsilon/jcgs/code/tmb"
-
-setwd(wdpath) # TMB needs this, I think (?)
-
-docompile <- FALSE # Set to TRUE if you need to compile the TMB function template
-
 # Precompile TMB
 precompile()
-# Compile function template- only needs to be done once
-if (docompile) compile("13_astro.cpp")
-# Load it
-dyn.load(dynlib("13_astro"))
+# Compile and load the TMB template. Source code included in the aghq package
+tmbpath <- tempdir()
+stopifnot(file.copy(system.file('extsrc/04_astro.cpp',package='aghq'),tmbpath))
+compile(file.path(tmbpath,"04_astro.cpp"))
+dyn.load(dynlib(file.path(tmbpath,"04_astro")))
 
 ## Load data ----
 data("gcdatalist",package = 'aghq')
@@ -96,25 +116,17 @@ get_ad_object <- function(theta,constraintfun = FALSE) {
   datlist$a <- paramstart[3]
   datlist$b <- paramstart[4]
   
-  ff <- MakeADFun(data = datlist,parameters = list(W = w),DLL = "13_astro",ADreport = constraintfun,silent = TRUE)
+  ff <- MakeADFun(data = datlist,parameters = list(W = w),DLL = "04_astro",ADreport = constraintfun,silent = TRUE)
   
   ff
 }
 
 make_w_matrix <- function(W) {
-  # W: vector of length 4n containing measurement errors 1:n for
-  # Rgc, Vlos, PMra and PMdec, in that order
-  # UPDATE: only use measurement errors on the position and line of sight velocity
-  # The proper motions result in numerical instability
-  # n <- length(W)/4
   n <- length(W)/2
   
   idx1 <- 1:n
   idx2 <- idx1 + n
-  # idx3 <- idx2 + n
-  # idx4 <- idx3 + n
-  
-  # cbind(W[idx1],W[idx2],W[idx3],W[idx4])
+
   cbind(W[idx1],W[idx2]) # Don't include measurement errors for PM right now
 }
 
@@ -225,13 +237,16 @@ ff <- list(
   gr = grad_log_posterior_W,
   he = H_matrix
 )
+cat("Fitting model.\n")
 aghqmodel <- marginal_laplace(
   ff,
   k = 3,
   startingvalue = list(W = rep(0,2*nrow(gcdatalist$y)),theta = get_theta(c(26.000,0.375,3.040,0.400)))
 )
 
-## Posteiror summaries ----
+## Posterior summaries ----
+
+cat("Computing summaries.\n")
 
 PLOTTEXTSIZE <- 28
 
@@ -275,8 +290,8 @@ psi0_postplot <- psi0post %>%
   theme_classic() +
   geom_line(size = 1) +
   stat_function(fun = Psi0prior,linetype = "dashed") +
-  # labs(title = "",x = expression(psi),y = "") +
-  labs(title = "",x = "",y = "") +
+  labs(title = "",x = expression(Psi),y = "") +
+  # labs(title = "",x = "",y = "") +
   scale_x_continuous(breaks = seq(24,42,by = 2)) +
   theme(text = element_text(size = PLOTTEXTSIZE))
 
@@ -285,8 +300,8 @@ gamma_postplot <- gammapost %>%
   theme_classic() +
   geom_line(size = 1) +
   stat_function(fun = gammaprior,linetype = "dashed") +
-  # labs(title = "",x = expression(gamma),y = "") +
-  labs(title = "",x = "",y = "") +
+  labs(title = "",x = expression(gamma),y = "") +
+  # labs(title = "",x = "",y = "") +
   scale_x_continuous(breaks = seq(.3,.45,by = .02)) +
   theme(text = element_text(size = PLOTTEXTSIZE))
 
@@ -295,8 +310,8 @@ alpha_postplot <- alphapost %>%
   theme_classic() +
   geom_line(size = 1) +
   stat_function(fun = alphaprior,linetype = "dashed") +
-  # labs(title = "",x = expression(alpha),y = "") +
-  labs(title = "",x = "",y = "") +
+  labs(title = "",x = expression(alpha),y = "") +
+  # labs(title = "",x = "",y = "") +
   scale_x_continuous(breaks = seq(3,3.3,by = .02)) +
   theme(text = element_text(size = PLOTTEXTSIZE)) +
   coord_cartesian(xlim = c(3,3.1))
@@ -306,8 +321,8 @@ beta_postplot <- betapost %>%
   theme_classic() +
   geom_line(size = 1) +
   stat_function(fun = betaprior,linetype = "dashed") +
-  # labs(title = "",x = expression(beta),y = "") +
-  labs(title = "",x = "",y = "") +
+  labs(title = "",x = expression(beta),y = "") +
+  # labs(title = "",x = "",y = "") +
   scale_x_continuous(breaks = seq(-.3,.4,by = .2)) +
   theme(text = element_text(size = PLOTTEXTSIZE))
 
@@ -361,31 +376,31 @@ massplot <- tibble(
 # Save the plots
 WIDTH <- HEIGHT <- 7
 ggsave(
-  paste0(plotsavepath,"psi0postplot-",datestamp,"-",version,".pdf"),
+  file.path(figurepath,paste0("psi0postplot-",datestamp,"-",version,".pdf")),
   psi0_postplot,
   width = WIDTH,height = HEIGHT
 )
 ggsave(
-  paste0(plotsavepath,"gammapostplot-",datestamp,"-",version,".pdf"),
+  file.path(figurepath,paste0("gammapostplot-",datestamp,"-",version,".pdf")),
   gamma_postplot,
   width = WIDTH,height = HEIGHT
 )
 ggsave(
-  paste0(plotsavepath,"alphapostplot-",datestamp,"-",version,".pdf"),
+  file.path(figurepath,paste0("alphapostplot-",datestamp,"-",version,".pdf")),
   alpha_postplot,
   width = WIDTH,height = HEIGHT
 )
 ggsave(
-  paste0(plotsavepath,"betapostplot-",datestamp,"-",version,".pdf"),
+  file.path(figurepath,paste0("betapostplot-",datestamp,"-",version,".pdf")),
   beta_postplot,
   width = WIDTH,height = HEIGHT
 )
 ggsave(
-  paste0(plotsavepath,"masspostplot-",datestamp,"-",version,".pdf"),
+  file.path(figurepath,paste0("masspostplot-",datestamp,"-",version,".pdf")),
   massplot,
   width = WIDTH,height = HEIGHT
 )
 
 
-
+cat(paste0("Done. You can go to ",figurepath," to see the output. Thanks!\n"))
 
