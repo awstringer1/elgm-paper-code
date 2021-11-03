@@ -35,6 +35,7 @@ Packages are loaded, and installed if not found, at the top of each script. Two 
   - INLA timings: *01-opioid-inla.R*,
   - MCMC timings: *01-opioid-mcmc.R*,
   - Output comparisons and creation of Tables 1 and 2: *01-opioid-combine.R*.
+  - Attempt to fit the model using VI: *01-opioid-vb.R*.
 
 - **Section 6.1**:
   - ELGM: *02-disaggregation.R*,
