@@ -121,7 +121,7 @@ for (tt in 1:numtimes) {
 # Only run INLA on full data once, crashes with too many threads, and takes a long time
 cat("Fitting INLA to full data now.\n")
 tm <- Sys.time()
-model_obj_nfull <- fit_model(opioid_clean,tr=8) # Run with 8 threads, crashes with 16
+model_obj_nfull <- fit_model(opioid_clean,tr=1) # Run with 1 thread, crashes with 16
 tm_nfull <- difftime(Sys.time(),tm,units = "secs")
 cat("n = full, time = ",tm_nfull,".\n")
 

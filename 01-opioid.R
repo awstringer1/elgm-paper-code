@@ -29,7 +29,7 @@ TMB::precompile()
 # Check that OpenMP is installed and working.
 # The time comparisons in the paper require this. If not, the times will be slower
 # than what we reported.
-stopifnot()
+stopifnot(TMB::openmp() > 0)
 
 ## Global variables ----
 

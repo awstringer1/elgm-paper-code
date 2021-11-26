@@ -3,8 +3,6 @@
 # Data obtained from aghq package
 # Results saved to temp storage
 # This script should be sourcable without modification
-# NOTE: you need the ipoptr package to run this script. This is a nonstandard installation.
-# Instructions: https://coin-or.github.io/Ipopt/INSTALL.html
 
 
 ## BEGIN SETUP ##
@@ -16,18 +14,13 @@ pkgs <- c(
   'tidyverse',
   'Matrix',
   'aghq',
-  'TMB',
-  'ipoptr'
+  'TMB'
 )
 for (pkg in pkgs) {
   if (!require(pkg,character.only = TRUE,quietly = TRUE)) {
     cat(paste0("Could not find package ",pkg,", installing from CRAN.\n"))
-    if (pkg=='ipoptr') {
-      stop("You need to install ipoptr to run this script. This is a non-standard installation. Instructions found at https://coin-or.github.io/Ipopt/INSTALL.html")
-    } else {
-      install.packages(pkg)
-      require(pkg,character.only = TRUE,quietly = TRUE)
-    }
+    install.packages(pkg)
+    require(pkg,character.only = TRUE,quietly = TRUE)
   }
 }
 
