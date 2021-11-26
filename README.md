@@ -22,13 +22,11 @@ The examples are replicated in the following scripts. Every effort has been made
 
 1. In all scripts for Section 5, you have to set the path to the data you downloaded, as well as paths to save the results. These are located between the `## BEGIN SETUP ##` and `## END SETUP ##` comments at the top of each script.
 2. In the script for Section 6.1, data are downloaded from the internet within the script. If those data change location or are otherwise unobtainable at the time of running, then the script will not run. This is checked for within the script and informative errors are printed.
-3. The script for Section 6.3 depends on the `IPOPT` software, which can be onerous to install.
-4. The time comparisons assume you are working on an OpenMP-enabled machine. If you are not, the speeds for the ELGM will be slower (I assume).
+3. The time comparisons assume you are working on an OpenMP-enabled machine. If you are not, the speeds for the ELGM will be slower (I assume).
 
-Packages are loaded, and installed if not found, at the top of each script. Two non-standard installations:
+Packages are loaded, and installed if not found, at the top of each script. Non-standard installations:
 
 1. Package `INLA` is not on `CRAN`. It is installed within the scripts. You need to use the `PARDISO` sparse matrix library if attempting to replicate the time comparisons in Section 5. Instructions for enabling this are found in the script where it is needed.
-2. Package `ipoptr` is not on `CRAN`, and requires installation of the `IPOPT` optimization software. See https://coin-or.github.io/Ipopt/INSTALL.html.
 
 - **Section 5**: run the following scripts in the order provided:
   - Data cleaning and ELGM timings: *01-opioid.R*,
