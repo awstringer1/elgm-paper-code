@@ -1,5 +1,7 @@
 # Code for Fast, Scalable Approximations to Posterior Distributions in Extended Latent Gaussian Models
 
+*Note: this README corresponds to the most current revision of the paper. It does not exactly match what's on arXiv.*
+
 This README describes the code files in this repository which replicate the examples from the manuscript *Fast, Scalable Approximations to Posterior Distributions in Extended Latent Gaussian Models* (arXiv).
 
 All examples make use of the `aghq` package for approximate Bayesian inference using adaptive Gauss-Hermite quadrature, which is on `CRAN` ([github](https://github.com/awstringer1/aghq/), [arXiv](https://arxiv.org/abs/2101.04468)).
@@ -33,6 +35,7 @@ Packages are loaded, and installed if not found, at the top of each script. Non-
   - INLA timings: *01-opioid-inla.R*,
   - MCMC timings: *01-opioid-mcmc.R*,
   - Output comparisons and creation of Tables 1 and 2: *01-opioid-combine.R*.
+  - Comparison of ELGM/INLA/MCMC for page 16, lines 350 -- 360: *01-opioid-inla-elgm-compare.R*.
   - Attempt to fit the model using VI: *01-opioid-vb.R*.
 
 - **Section 6.1**:
