@@ -25,6 +25,8 @@ for (pkg in pkgs) {
 TMB::precompile()
 
 ## Global variables
+# where to save the results
+savepath <- "~/data/
 
 # Number of total iterations. This need NOT be large, since the model objects created
 # in this script are only ever used for time comparison, which is done on a per-iteration basis.
@@ -132,5 +134,5 @@ timeframe <- tibble(
 
 print(timeframe,n = Inf)
 
-write_csv(timeframe,"~/data/mcmc-timeframe-20211022.csv")
+write_csv(timeframe,file.path(savepath,"mcmc-timeframe-20211022.csv"))
 cat("Done.\n")
