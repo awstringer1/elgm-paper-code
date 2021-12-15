@@ -59,7 +59,7 @@ dyn.load(dynlib(file.path(tmbpath,"01_opioid")))
 ## END SETUP ##
 
 ## Fit all three methods to the same datasets ----
-fit_all_models <- function(dat,domcmc=TRUE,tr=16) {
+fit_all_models <- function(dat,domcmc=TRUE,tr=16,mcmc_iter=1e04,mcmc_warmup=1e03) {
   # domcmc: set to FALSE to skip mcmc
   # tr: number of threads to use for INLA, set lower if it crashes
   ## ELGM ##
@@ -128,8 +128,8 @@ fit_all_models <- function(dat,domcmc=TRUE,tr=16) {
     stanmod <- tmbstan::tmbstan(
       template,
       chains = 1,
-      iter = 1e05,
-      warmup = 1e03,
+      iter = mcmc_iter,
+      warmup = mcmc_warmup,
       cores = 1 # The template is already parallelized, so don't do this.
     )
   } else {
@@ -163,7 +163,7 @@ models_10000 <- fit_all_models(dat_10000)
 cat("Fitting model, n = 100000.\n")
 models_100000 <- fit_all_models(dat_100000)
 cat("Fitting model, n = 1000000.\n")
-models_1000000 <- fit_all_models(dat_1000000)
+models_1000000 <- fit_all_models(dat_1000000,domcmc = TRUE)
 cat("Fitting model, n = full.\n")
 models_full <- fit_all_models(opioid_clean,domcmc = FALSE,tr=1)
 
@@ -314,3 +314,11 @@ timecompare <- dplyr::left_join(timecompare,equiviter,by=c('method','n'))
 readr::write_csv(timecompare,file.path(globalpath,"timecompare-table-20211101.csv"))
 
 cat("Done.\n")
+
+# Print nice for paper
+# kstable %>%
+#   pivot_longer(aghq:aghqinla,names_to = "method",values_to = "ks") %>%
+#   filter(ks != -1) %>%
+#   pivot_wider(names_from = "var",values_from = 'ks') %>%
+#   arrange(n,method) %>%
+#   knitr::kable(digits = 3,format = 'latex')
