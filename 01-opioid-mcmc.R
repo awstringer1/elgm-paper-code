@@ -26,7 +26,7 @@ TMB::precompile()
 
 ## Global variables
 # where to save the results
-savepath <- "~/data/
+savepath <- "~/data"
 
 # Number of total iterations. This need NOT be large, since the model objects created
 # in this script are only ever used for time comparison, which is done on a per-iteration basis.
