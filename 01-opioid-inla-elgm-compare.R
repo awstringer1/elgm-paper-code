@@ -32,7 +32,7 @@ TMB::precompile()
 # Note: the INLA developers strongly suggest using PARDISO for speed. This requires
 # a license. Instructions available by typing INLA::inla.pardiso() (opens a web browser)
 # PARDISO is used in the timings in the paper.
-# Uncomment the next two lines if you don't want to use PARDISO when running this code:
+# Comment the next two lines if you don't want to use PARDISO when running this code:
 inla.setOption(pardiso.license="/home/alex/sys/licenses/pardiso.lic")
 stopifnot(inla.pardiso.check() == "SUCCESS: PARDISO IS INSTALLED AND WORKING")
 
