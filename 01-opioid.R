@@ -32,6 +32,8 @@ TMB::precompile()
 stopifnot(TMB::openmp() > 0)
 
 ## Global variables ----
+# where to save the data
+savepath <- "~/data/"
 
 # How many times to do each simulation
 numtimes <- 10
@@ -225,5 +227,5 @@ timeframe <- tibble(
 
 print(timeframe,n = Inf)
 
-write_csv(timeframe,"~/data/timeframe-20211022.csv")
+write_csv(timeframe,file.path(savepath,"timeframe-20211022.csv"))
 cat("Done.\n")
