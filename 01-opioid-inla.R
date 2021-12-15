@@ -34,8 +34,8 @@ stopifnot(inla.pardiso.check() == "SUCCESS: PARDISO IS INSTALLED AND WORKING")
 
 
 ## Global variables
-# where to save the data
-savepath <- "~/data/
+# where to save the results
+savepath <- "~/data"
 
 # Number of threads to run INLA with. Use the same number as for running ELGM
 threads <- 16
