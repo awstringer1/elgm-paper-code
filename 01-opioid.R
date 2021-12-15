@@ -33,7 +33,7 @@ stopifnot(TMB::openmp() > 0)
 
 ## Global variables ----
 # where to save the results
-resultspath <- "~/data/"
+resultspath <- "~/data"
 
 # How many times to do each simulation
 numtimes <- 10
