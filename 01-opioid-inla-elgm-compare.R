@@ -1,5 +1,5 @@
 ### Combine results from all analyses of the Opioid data ###
-## THIS IS A TEMPORARY FILE FOR DEBUGGING INLA ##
+
 
 ## BEGIN SETUP ##
 
