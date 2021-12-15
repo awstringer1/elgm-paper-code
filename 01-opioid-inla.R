@@ -34,6 +34,8 @@ stopifnot(inla.pardiso.check() == "SUCCESS: PARDISO IS INSTALLED AND WORKING")
 
 
 ## Global variables
+# where to save the data
+savepath <- "~/data/
 
 # Number of threads to run INLA with. Use the same number as for running ELGM
 threads <- 16
@@ -136,5 +138,5 @@ timeframe <- tibble(
 
 print(timeframe,n = Inf)
 
-write_csv(timeframe,"~/data/inla-timeframe-20211022.csv")
+write_csv(timeframe,file.path(savepath,"inla-timeframe-20211022.csv"))
 cat("Done.\n")
