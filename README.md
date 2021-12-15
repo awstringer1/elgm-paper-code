@@ -30,6 +30,8 @@ Packages are loaded, and installed if not found, at the top of each script. Non-
 
 1. Package `INLA` is not on `CRAN`. It is installed within the scripts. You need to use the `PARDISO` sparse matrix library if attempting to replicate the time comparisons in Section 5. Instructions for enabling this are found in the script where it is needed.
 
+The results in the paper are reproduced as follows:
+
 - **Section 5**: run the following scripts in the order provided:
   - Data cleaning and ELGM timings: *01-opioid.R*,
   - INLA timings: *01-opioid-inla.R*,
