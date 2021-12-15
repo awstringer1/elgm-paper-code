@@ -4,7 +4,7 @@
 
 This README describes the code files in this repository which replicate the examples from the manuscript *Fast, Scalable Approximations to Posterior Distributions in Extended Latent Gaussian Models* (arXiv).
 
-All examples make use of the `aghq` package for approximate Bayesian inference using adaptive Gauss-Hermite quadrature, which is on `CRAN` ([github](https://github.com/awstringer1/aghq/), [arXiv](https://arxiv.org/abs/2101.04468)).
+All examples make use of the `aghq` package version `0.3.1` for approximate Bayesian inference using adaptive Gauss-Hermite quadrature, which is on `CRAN` ([github](https://github.com/awstringer1/aghq/), [arXiv](https://arxiv.org/abs/2101.04468)).
 
 ## Data
 
