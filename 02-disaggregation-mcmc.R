@@ -42,7 +42,6 @@ covfl <- c("EVI","Elevation","LSTmean")
 covdatapath <- paste0(spatialdatapath,"covariates/",covfl,".tif?raw=TRUE")
 
 # Path to save mcmc results
-# Leave blank to turn off using mcmc here
 # Creating the mcmc results took ~29 hours on my hardware.
 mcmcdir <- file.path(tempdir(),"mcmc")
 if (!dir.exists(mcmcdir)) dir.create(mcmcdir)
